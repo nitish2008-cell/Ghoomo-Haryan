@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f5a66">
+<meta name="description" content="Ghoomo Haryana — AI day-trip planner for Mullana, Ambala, Kurukshetra & Pinjore. Offline + AI.">
+<title>Ghoomo Haryana · AI Local Trip Planner</title>
+<style>
+:root{
+  --orange:#f26b1d; --teal:#0f5a66; --deep:#0b3d47; --ink:#12303a;
+  --bg:#f6f2ea; --card:#fff; --muted:#5c6b70; --line:#d9e2e4;
+  --gem:#c2410c; --ok:#1b7a34; --warn:#b45309;
+  --radius:16px; --shadow:0 4px 20px rgba(18,48,58,.08);
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+  --text:16px; --gap:14px;
+}
+[data-theme="dark"]{
+  --bg:#0f1c20; --card:#1a2c32; --ink:#e8f0f2; --muted:#9aadb3;
+  --line:#2a4048; --shadow:0 4px 24px rgba(0,0,0,.35);
+}
+[data-kid="on"]{ --text:18px; --gap:18px; --radius:20px; }
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);font-size:var(--text);background:var(--bg);color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+
+header{
+  position:sticky;top:0;z-index:20;
+  background:linear-gradient(135deg,var(--teal),var(--deep));
+  color:#fff;padding:12px 14px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  box-shadow:0 2px 12px rgba(0,0,0,.18);
+}
+.brand h1{margin:0;font-size:1.28rem;font-weight:800;letter-spacing:-.02em}
+.brand p{margin:2px 0 0;font-size:.75rem;opacity:.9}
+.tools{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.tool{
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  color:#fff;border-radius:999px;padding:6px 11px;font-weight:600;font-size:.82rem;
+  min-height:38px;min-width:38px;display:inline-flex;align-items:center;justify-content:center;
+}
+.tool:hover,.tool:active{background:rgba(255,255,255,.28)}
+.tool.on{background:#fff;color:var(--teal)}
+
+main{max-width:880px;margin:0 auto;padding:14px 12px 36px}
+
+/* Weather + unique strip */
+.topstrip{
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:stretch;
+}
+.strip{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:10px 14px;box-shadow:var(--shadow);font-size:.88rem;
+  display:flex;align-items:center;gap:8px;flex:1;min-width:140px;
+}
+.strip strong{color:var(--teal)}
+.demo-btn{
+  background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;
+  border-radius:14px;padding:10px 16px;font-weight:800;font-size:.9rem;
+  box-shadow:0 4px 14px rgba(124,58,237,.35);white-space:nowrap;
+}
+.demo-btn:hover{transform:translateY(-1px)}
+
+.card{
+  background:var(--card);border-radius:var(--radius);padding:16px;
+  box-shadow:var(--shadow);margin-bottom:var(--gap);border:1px solid var(--line);
+}
+label{display:block;font-weight:700;font-size:.78rem;margin:8px 0 4px;color:var(--muted);letter-spacing:.03em;text-transform:uppercase}
+input,select{
+  width:100%;padding:11px 12px;border:1.5px solid var(--line);
+  border-radius:12px;background:var(--card);color:var(--ink);font-size:1rem;
+}
+input:focus,select:focus{border-color:var(--teal)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+
+.presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.pre{
+  background:linear-gradient(145deg,#fff8f0,#e8f6f8);
+  border:2px solid #f0dcc8;border-radius:14px;padding:12px 8px;
+  text-align:center;transition:transform .15s,border-color .15s;
+}
+[data-theme="dark"] .pre{background:linear-gradient(145deg,#243840,#1e3238);border-color:#3a555e}
+.pre:hover,.pre:active{transform:translateY(-2px);border-color:var(--orange)}
+.pre span{display:block;font-size:1.7rem;margin-bottom:3px}
+.pre b{font-size:.85rem;display:block}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  border:1.5px solid var(--teal);color:var(--teal);
+  padding:8px 13px;border-radius:999px;font-weight:600;font-size:.9rem;
+  user-select:none;transition:all .15s;
+}
+.chip.on{background:var(--teal);color:#fff}
+
+.go{
+  width:100%;margin-top:14px;padding:14px;background:var(--orange);
+  color:#fff;border-radius:14px;font-size:1.08rem;font-weight:800;
+  box-shadow:0 4px 14px rgba(242,107,29,.35);
+}
+.go:hover{transform:translateY(-1px)}
+.go:disabled{opacity:.55;cursor:wait}
+.secondary{
+  width:100%;margin-top:8px;padding:11px;border:1.5px solid var(--teal);
+  color:var(--teal);border-radius:12px;font-weight:700;font-size:.95rem;
+}
+
+.badge{display:inline-block;font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:999px;margin-right:4px}
+.gem{background:#ffe8d4;color:var(--gem)}
+.ai{background:#d6f0f4;color:var(--teal)}
+.off{background:#eceff1;color:#555}
+.cat{background:#eef4e0;color:#4a6a14}
+.kid{background:#e0f5e4;color:var(--ok)}
+.score{background:#ede9fe;color:#5b21b6}
+[data-theme="dark"] .gem{background:#3d2418;color:#ffb380}
+[data-theme="dark"] .ai{background:#1a3338;color:#7ec8d4}
+[data-theme="dark"] .off{background:#2a3538;color:#aaa}
+[data-theme="dark"] .cat{background:#2a3520;color:#a3c46e}
+[data-theme="dark"] .kid{background:#1a3322;color:#6dca8a}
+[data-theme="dark"] .score{background:#2a2040;color:#c4b5fd}
+
+.sum{border-left:5px solid var(--orange)}
+.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.actions button{
+  background:var(--card);border:1.5px solid var(--teal);color:var(--teal);
+  border-radius:11px;padding:8px 12px;font-weight:700;font-size:.86rem;
+}
+.actions button:hover{background:var(--teal);color:#fff}
+
+.tl{position:relative;padding-left:16px;border-left:3px dashed var(--line);margin:6px 0 6px 8px}
+.stop{position:relative;margin-bottom:16px}
+.stop::before{
+  content:attr(data-n);position:absolute;left:-30px;top:16px;
+  width:22px;height:22px;border-radius:50%;background:var(--orange);
+  color:#fff;font-size:.72rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;border:3px solid var(--bg);
+}
+.time{font-weight:800;color:var(--teal);font-size:.92rem;margin-bottom:4px}
+.stop .card{margin:0;border-left:4px solid var(--orange)}
+.stop h3{margin:0 0 5px;font-size:1.1rem}
+.meta{font-size:.85rem;color:var(--muted);margin:5px 0}
+.line{font-size:.93rem;margin:6px 0;line-height:1.45}
+.line b{color:var(--teal)}
+a.map{font-size:.88rem;color:var(--orange);font-weight:700;text-decoration:none}
+
+.costbar{
+  display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;
+  padding:9px 11px;background:rgba(15,90,102,.06);border-radius:12px;font-size:.88rem;
+}
+[data-theme="dark"] .costbar{background:rgba(255,255,255,.05)}
+.costbar strong{color:var(--orange)}
+
+.routebar{
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;
+  font-size:.85rem;color:var(--muted);
+}
+.routebar .dot{width:6px;height:6px;border-radius:50%;background:var(--orange)}
+
+#msgs{max-height:280px;overflow:auto;display:flex;flex-direction:column;gap:7px;margin-bottom:8px;padding:3px}
+.m{padding:9px 13px;border-radius:15px;max-width:88%;font-size:.93rem;line-height:1.45;white-space:pre-wrap}
+.u{align-self:flex-end;background:var(--teal);color:#fff;border-bottom-right-radius:4px}
+.b{align-self:flex-start;background:var(--line);color:var(--ink);border-bottom-left-radius:4px}
+[data-theme="dark"] .b{background:#243840}
+.send{display:flex;gap:7px}
+.send input{flex:1}
+.send button{background:var(--orange);color:#fff;border-radius:11px;padding:0 14px;font-weight:700;min-width:46px}
+.mic{font-size:1.15rem!important;background:var(--teal)!important}
+
+.skeleton{background:linear-gradient(90deg,var(--line) 25%,rgba(255,255,255,.4) 50%,var(--line) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:10px;height:16px;margin:7px 0}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.note{font-size:.84rem;color:var(--muted);margin-top:5px}
+.safety{background:#fff8e6;border:1px solid #f0d78c;border-radius:12px;padding:9px 12px;margin-top:8px;font-size:.88rem}
+[data-theme="dark"] .safety{background:#2a2418;border-color:#5a4a20}
+.helpline{
+  background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:10px 12px;margin-top:8px;font-size:.86rem;
+}
+[data-theme="dark"] .helpline{background:#0c2430;border-color:#164e63}
+.checklist{margin:8px 0 0;padding-left:18px;font-size:.88rem}
+.checklist li{margin:3px 0}
+
+footer{text-align:center;color:var(--muted);font-size:.78rem;padding:18px 10px 24px;border-top:1px solid var(--line);margin-top:6px}
+
+@media print{
+  header,.tools,.presets,.send,#qs,.go,.actions,.chip,.topstrip,.secondary{display:none!important}
+  body{background:#fff;color:#000}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+}
+@media (max-width:480px){
+  .brand h1{font-size:1.1rem}
+  .tool{padding:5px 9px;font-size:.78rem}
+  .row{grid-template-columns:1fr 1fr}
+}
+</style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0f5a66"><link rel="icon" href="icon.svg"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+body{font-family:Poppins,system-ui,sans-serif!important;background:linear-gradient(160deg,#fff1e6 0%,#e0f7f4 55%,#f3e8ff 100%) fixed!important}
+[data-theme=dark] body{background:linear-gradient(160deg,#0b1d24,#13152e) fixed!important}
+.card{backdrop-filter:blur(14px);border-radius:22px!important;box-shadow:0 10px 30px rgba(15,90,102,.14)!important;border:1px solid rgba(255,255,255,.6)}
+button,.chip{border-radius:999px!important;transition:transform .15s,box-shadow .15s}
+button:hover,.chip:hover,.pre:hover{transform:translateY(-2px) scale(1.03)}
+#go{background:linear-gradient(90deg,#ff4d8d,#f97316,#facc15)!important;color:#fff!important;font-weight:800;box-shadow:0 8px 22px rgba(255,77,141,.4)}
+.chip.on{background:linear-gradient(90deg,#0f5a66,#14b8a6)!important;color:#fff!important}
+.pre{border-radius:18px!important;box-shadow:0 6px 16px rgba(0,0,0,.08);transition:transform .15s}
+.stop .card{animation:rise .5s both}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes bob{50%{transform:translateY(-10px) rotate(6deg)}}
+@keyframes drift{to{transform:translateX(-40px)}}
+.hero{position:relative;overflow:hidden;border-radius:28px;margin:10px 0 16px;color:#fff;text-align:center;padding:34px 14px 110px;background:linear-gradient(160deg,#6d28d9 0%,#ec4899 45%,#f97316 80%,#facc15 100%);box-shadow:0 18px 40px rgba(236,72,153,.35)}
+.hero h1{margin:0;font-size:clamp(1.5rem,6vw,2.4rem);font-weight:800;line-height:1.15;text-shadow:0 3px 14px rgba(0,0,0,.25)}
+.hero p{margin:8px 0 14px;opacity:.95}
+.hero .st{position:absolute;font-size:2rem;animation:bob 4s ease-in-out infinite;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+.hero .pill{display:inline-block;margin:3px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.22);backdrop-filter:blur(6px);font-size:.8rem;font-weight:700}
+.hero svg{position:absolute;left:0;bottom:0;width:100%;height:100px}
+.gems{display:flex;gap:12px;overflow-x:auto;padding:6px 2px 14px;scroll-snap-type:x mandatory}
+.gc{flex:0 0 190px;scroll-snap-align:start;border-radius:22px;overflow:hidden;background:rgba(255,255,255,.85);color:#0f2a33;box-shadow:0 10px 24px rgba(0,0,0,.12);transition:transform .2s}
+.gc:hover{transform:translateY(-4px) rotate(-1deg)}
+.gc .art{height:96px;display:grid;place-items:center;font-size:2.8rem;position:relative}
+.gc .art:after{content:"💎";position:absolute;top:6px;right:8px;font-size:1rem}
+.gc .bd{padding:10px 12px 12px}.gc b{display:block;font-size:.92rem}.gc small{opacity:.75}
+.gc button{margin-top:8px;width:100%;padding:7px;border:0;background:linear-gradient(90deg,#0f5a66,#14b8a6);color:#fff;font-weight:700;cursor:pointer}
+h2.sec{margin:18px 4px 6px;font-size:1.15rem;font-weight:800}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>🧭 Ghoomo Haryana</h1>
+    <p id="tag">Made in Haryana · AI day trips for real locals</p>
+  </div>
+  <div class="tools">
+    <button class="tool" id="btnKid" onclick="toggleKid()" aria-pressed="false" title="Kid mode">🧒</button>
+    <button class="tool" id="btnTheme" onclick="toggleTheme()" aria-label="Dark mode">🌙</button>
+    <button class="tool" onclick="zoom(-.08)" aria-label="Smaller">A−</button>
+    <button class="tool" onclick="zoom(.08)" aria-label="Bigger">A+</button>
+    <button class="tool" id="lb" onclick="toggleLang()">हिन्दी</button>
+  </div>
+</header>
+
+<main>
+<div class="hero">
+  <span class="st" style="left:6%;top:18%">🛕</span><span class="st" style="right:8%;top:14%;animation-delay:-1s">🌾</span>
+  <span class="st" style="left:14%;bottom:34%;animation-delay:-2s">🪁</span><span class="st" style="right:16%;bottom:38%;animation-delay:-3s">🐘</span>
+  <h1>Your Haryana.<br>Your Journey.<br>Your Way.</h1>
+  <p>आपका हरियाणा · आपका सफ़र · आपका तरीका</p>
+  <span class="pill">💸 Budget-smart</span><span class="pill">🏠 Home-by-time</span><span class="pill">🗣️ Hinglish / Voice</span><span class="pill">📴 Offline</span>
+  <svg viewBox="0 0 400 100" preserveAspectRatio="none"><circle cx="320" cy="40" r="26" fill="#fde68a" opacity=".9"/><path d="M0 70 Q60 30 120 62 T240 58 T400 50 V100 H0Z" fill="#14b8a6" opacity=".55"/><path d="M0 82 Q80 52 160 78 T320 74 T400 70 V100 H0Z" fill="#0f5a66"/><path d="M0 94 Q100 78 200 92 T400 88 V100 H0Z" fill="#facc15" opacity=".9"/><g fill="#0b3b44"><rect x="60" y="56" width="3" height="18"/><path d="M52 58 L61.5 44 L71 58Z"/><rect x="250" y="62" width="14" height="14"/><path d="M247 62 L257 50 L267 62Z"/></g></svg>
+</div>
+<h2 class="sec">💎 Hidden gems · tap to plan</h2><div class="gems" id="gems"></div>
+  <!-- Unique top strip -->
+  <div class="topstrip">
+    <div class="strip" id="weatherBox">☀️ <span id="weatherTxt">Loading weather…</span></div>
+    <button class="demo-btn" onclick="demoForJudges()">⚡ Demo for Judges</button>
+  </div>
+  <div class="card" style="padding:14px;border-left:4px solid var(--orange);margin-bottom:12px">
+    <div style="font-size:.9rem;line-height:1.45" id="pitchText">
+      <strong>Why not Google Maps?</strong> Hyper-local Haryana only · local food & hidden gems · works offline · Hindi-first · family/kid safe · budget + hours aware · return-home time built in.
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:.8rem">
+      <span class="badge ai" id="pillOffline">Offline-first</span>
+      <span class="badge cat" id="pillLocal">Hyper-local</span>
+      <span class="badge kid" id="pillFamily">Family safe</span>
+      <span class="badge score" id="pillHindi">Hindi-first</span>
+      <span class="badge gem" id="pillGems">Hidden gems</span>
+    </div>
+    <div style="margin-top:10px;font-size:.84rem;color:var(--muted)" id="howText">
+      <strong style="color:var(--ink)">How it works:</strong> 1) Pick time & budget → 2) AI or offline brain builds timed plan → 3) Chat, share, or leave now
+    </div>
+  </div>
+
+  <div class="card">
+    <label id="l_pre" style="margin-top:0">Quick trips — just tap one</label>
+    <div class="presets" id="pre"></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label id="l_start">Starting from</label>
+        <select id="start">
+          <option value="mullana">Mullana (MMDU)</option>
+          <option value="ambala">Ambala</option>
+          <option value="kkr">Kurukshetra</option>
+          <option value="pkl">Panchkula</option>
+          <option value="chd">Chandigarh</option>
+          <option value="ynr">Yamunanagar</option>
+        </select>
+      </div>
+      <div>
+        <label id="l_time">Start time</label>
+        <input type="time" id="stime" value="09:00">
+      </div>
+      <div>
+        <label id="l_hours">Hours available</label>
+        <input type="number" id="hours" value="6" min="2" max="12" step="0.5">
+      </div>
+      <div>
+        <label id="l_budget">Budget / person (₹)</label>
+        <input type="number" id="budget" value="500" min="0" step="50">
+      </div>
+      <div>
+        <label id="l_group">Group type</label>
+        <select id="group"></select>
+      </div>
+    </div>
+    <label id="l_int">Interests</label>
+    <div class="chips" id="chips"></div>
+    <div class="chips" style="margin-top:10px">
+      <span class="chip" id="gemOnlyChip" onclick="toggleGemOnly()" role="button">💎 Hidden gems only</span>
+    </div>
+    <button class="go" id="go" onclick="generate()">✨ Plan my trip</button>
+    <button class="secondary" onclick="leaveNow()">🚗 Leave now (set start = current time)</button>
+    <button class="secondary" onclick="loadLastPlan()" id="btnLast" style="display:none">📂 Open last plan</button>
+    <p class="note" id="offlineNote">Works offline. Not Google Maps — real local dhabas, hidden gems & Hindi-first.</p>
+    <p id="aiStatus" style="font-weight:800;margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(15,90,102,.08);font-size:.88rem"></p>
+  </div>
+
+  <details class="card" id="assume"><summary style="cursor:pointer;font-weight:800">⚙️ Assumptions &amp; data honesty (tune to your reality)</summary>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+   <label>🍛 Food ₹/person <input id="aFood" type="number" min="0" placeholder="auto" style="width:80px" onchange="setAssume()"></label>
+   <label>⛽ Vehicle ₹/km <input id="aKm" type="number" min="0" step="0.5" placeholder="auto" style="width:80px" onchange="setAssume()"></label>
+   <label><input id="aBuf" type="checkbox" onchange="setAssume()"> 🚦 Traffic buffer +25%</label></div>
+  <div class="meta">Distances = straight-line × 1.45 at ~42 km/h (estimate, not live traffic). Costs are estimates. Place fees/timings are a starter dataset marked "unverified" until confirmed. Plans re-check time &amp; budget every time you change these.</div></details>
+<div class="card" id="nlBox"><strong>🗣️ Just say it — Hindi / Hinglish / English</strong>
+  <div style="display:flex;gap:6px;margin-top:8px"><input id="nl" style="flex:1" placeholder="Mullana se 500 rupees mein family ke saath 5 ghante ki trip banao" onkeydown="if(event.key==='Enter')nlPlan()">
+  <button onclick="nlVoice()" aria-label="Speak">🎤</button><button onclick="nlPlan()">✨ Go</button></div>
+  <div class="meta" id="nlMsg">Works offline — understands start, budget, hours, group &amp; interests.</div></div>
+<div id="out"></div>
+
+  <div class="card">
+    <h3 style="margin-top:0" id="l_chat">💬 Ask the Local Guide</h3>
+    <div id="msgs" role="log" aria-live="polite"></div>
+    <div class="chips" id="qs" style="margin-bottom:8px"></div>
+    <div class="send">
+      <input id="q" placeholder="Ask about any place…" onkeydown="if(event.key==='Enter')ask()" aria-label="Question">
+      <button class="mic" onclick="mic()" aria-label="Speak">🎤</button>
+      <button onclick="ask()" id="sb">Send</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <strong>Ghoomo Haryana</strong> · HACKSPRINT 2026 · Sillico Sapiens · MMDU<br>
+  Fees &amp; timings approximate — verify on Google Maps · Built for real Haryana travellers
+</footer>
+
+<script>
+// No API key lives in the browser. AI calls go to a serverless proxy (api/gemini.js) that holds GEMINI_API_KEY.
+const CONFIG = { AI_ENDPOINT: "/api/gemini", TIMEOUT_MS: 20000 };
+
+const START = {
+  mullana:[30.268,77.045], ambala:[30.378,76.777], kkr:[29.969,76.878],
+  pkl:[30.694,76.86], chd:[30.733,76.779], ynr:[30.129,77.289]
+};
+const SN = {
+  mullana:{en:"Mullana",hi:"मुल्लाना"}, ambala:{en:"Ambala",hi:"अंबाला"},
+  kkr:{en:"Kurukshetra",hi:"कुरुक्षेत्र"}, pkl:{en:"Panchkula",hi:"पंचकूला"},
+  chd:{en:"Chandigarh",hi:"चंडीगढ़"}, ynr:{en:"Yamunanagar",hi:"यमुनानगर"}
+};
+const GROUPS = {
+  solo:[1,"Solo","अकेले"], couple:[2,"Couple","जोड़ा"],
+  friends:[4,"Friends","दोस्त"], family:[4,"Family with kids","बच्चों सहित परिवार"]
+};
+const INT = [
+  ["heritage","🏛️ Heritage","🏛️ विरासत"],["nature","🌿 Nature","🌿 प्रकृति"],
+  ["religious","🛕 Religious","🛕 धार्मिक"],["food","🍛 Food","🍛 खाना"],
+  ["adventure","🥾 Adventure","🥾 रोमांच"]
+];
+const PRE = [
+  {e:"👨‍👩‍👧",en:"Family fun day",hi:"परिवार का मज़ेदार दिन",i:["family","nature"],h:6,b:300,g:"family"},
+  {e:"🛕",en:"Spiritual half-day",hi:"आधे दिन की धार्मिक यात्रा",i:["religious","heritage"],h:4,b:200,g:"couple"},
+  {e:"💎",en:"Hidden gems explorer",hi:"छुपे रत्न खोजें",i:["nature","adventure","heritage"],h:8,b:500,g:"friends"},
+  {e:"🍛",en:"Foodie & culture",hi:"खाना और संस्कृति",i:["food","heritage"],h:5,b:300,g:"friends"}
+];
+
+const T = {
+  en:{
+    pre:"⚡ Quick trips — just tap one", tag:"Made in Haryana · AI day trips for real locals",
+    start:"Starting from",time:"Start time",hours:"Hours available",budget:"Budget / person (₹)",group:"Group type",int:"Interests",
+    go:"✨ Plan my trip",busy:"Planning your day…",chat:"💬 Ask the Local Guide",ph:"Ask about any place…",send:"Send",
+    gem:"💎 Hidden Gem",ai:"AI powered",off:"Offline planner",why:"Why visit",eat:"Eat",tip:"Local tip",fee:"Fee",free:"Free",
+    map:"📍 Open in Maps",copy:"📋 Copy",again:"🔄 New plan",total:"Entry fees",pp:"per person",note:"approx.",
+    hi:"Namaste! Ask me about history, food, timings or hidden spots.",
+    none:"Nothing fits. Try more hours or higher budget.",
+    qs:["Best place for food?","Which is a hidden gem?","Is Kalesar worth it?","Tell me about Jyotisar"],
+    err:"AI unavailable — used offline planner.", travel:"Travel",back:"Back home",safety:"Safety tip",
+    offlineNote:"Works offline. Not Google Maps — local food, hidden gems & Hindi-first.",
+    transport:"Est. local travel", kidMode:"Kid mode on — bigger text & simpler words",
+    fit:"Trip fit", leave:"Leave now", demo:"Demo plan ready for judges.",
+    before:"Before you go", help:"Emergency & helplines",
+    pitch:"<strong>Why not Google Maps?</strong> Hyper-local Haryana only · real dhabas & hidden gems · works offline · Hindi-first · family/kid safe · budget + hours aware · return-home time built in.",
+    how:"<strong style=\"color:var(--ink)\">How it works:</strong> 1) Pick time & budget → 2) AI or offline brain builds timed plan → 3) Chat, share, or leave now",
+    aiOn:"🤖 AI ready — richer plans enabled", aiOff:"⚙️ Offline mode active — smart rules still plan your day (AI planning needs internet + the /api/gemini function)"
+  },
+  hi:{
+    pre:"⚡ झटपट ट्रिप — बस एक टैप", tag:"हरियाणा में बना · असली लोगों के लिए AI ट्रिप",
+    start:"कहाँ से शुरू",time:"शुरू समय",hours:"उपलब्ध घंटे",budget:"प्रति व्यक्ति बजट (₹)",group:"समूह",int:"रुचियाँ",
+    go:"✨ मेरा ट्रिप बनाओ",busy:"आपका दिन प्लान हो रहा है…",chat:"💬 लोकल गाइड से पूछें",ph:"किसी भी जगह के बारे में पूछें…",send:"भेजें",
+    gem:"💎 छुपा रत्न",ai:"AI द्वारा",off:"ऑफ़लाइन प्लानर",why:"क्यों जाएँ",eat:"खाना",tip:"लोकल टिप",fee:"शुल्क",free:"निःशुल्क",
+    map:"📍 मैप में खोलें",copy:"📋 कॉपी",again:"🔄 नया प्लान",total:"प्रवेश शुल्क",pp:"प्रति व्यक्ति",note:"लगभग",
+    hi:"नमस्ते! इतिहास, खाना, समय या छुपे स्थलों के बारे में पूछें।",
+    none:"कुछ फिट नहीं हुआ। घंटे या बजट बढ़ाएँ।",
+    qs:["खाने के लिए सबसे अच्छी जगह?","कौन सी छुपा रत्न है?","क्या कालेसर जाना चाहिए?","ज्योतिसर के बारे में बताओ"],
+    err:"AI उपलब्ध नहीं — ऑफ़लाइन प्लानर इस्तेमाल किया।", travel:"यात्रा",back:"घर वापसी",safety:"सुरक्षा टिप",
+    offlineNote:"ऑफ़लाइन भी चलता है। Google Maps नहीं — लोकल खाना, छुपे रत्न, हिंदी पहले।",
+    transport:"अनुमानित लोकल यात्रा", kidMode:"किड मोड चालू — बड़ा अक्षर",
+    fit:"ट्रिप फिट", leave:"अभी निकलो", demo:"जजों के लिए डेमो प्लान तैयार।",
+    before:"जाने से पहले", help:"आपातकालीन हेल्पलाइन",
+    pitch:"<strong>Google Maps क्यों नहीं?</strong> सिर्फ हरियाणा · लोकल खाना व छुपे रत्न · ऑफ़लाइन · हिंदी पहले · परिवार/बच्चे सुरक्षित · बजट + घंटे · घर वापसी समय।",
+    how:"<strong style=\"color:var(--ink)\">कैसे काम करता है:</strong> 1) समय और बजट चुनो → 2) AI या ऑफ़लाइन ब्रेन प्लान बनाए → 3) चैट, शेयर, या अभी निकलो",
+    aiOn:"🤖 AI तैयार — बेहतर प्लान", aiOff:"⚙️ ऑफ़लाइन मोड चालू — स्मार्ट नियम से प्लान बनेगा (AI के लिए इंटरनेट + /api/gemini चाहिए)"
+  }
+};
+
+let PLACES=[], lang="en", plan=null, chosen=new Set(["heritage","nature"]);
+let hist=[], lastPlace=null, z=1, kidMode=false, gemOnly=false;
+
+const $=id=>document.getElementById(id);
+const S=()=>T[lang];
+const P=id=>PLACES.find(p=>p.id===id);
+const fm=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(Math.round(m%60)).padStart(2,"0");
+const tm=s=>{const [h,m]=(s||"09:00").split(":").map(Number);return h*60+(m||0)};
+function km(a,b){const r=x=>x*Math.PI/180,dl=r(b[0]-a[0]),dn=r(b[1]-a[1]);const x=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dn/2)**2;return 12742*Math.asin(Math.sqrt(x))}
+const ASSUME={food:null,perKm:null,buffer:1};
+const drive=(a,b)=>Math.max(8,Math.round(km(a,b)*1.45/42*60*ASSUME.buffer/5)*5);
+
+async function loadPlaces(){
+  try{
+    const r=await fetch("places.json");
+    if(!r.ok)throw 0;
+    PLACES=await r.json();
+  }catch{
+    PLACES=[
+      {id:"brahma",name:{en:"Brahma Sarovar",hi:"ब्रह्म सरोवर"},tags:["religious","heritage","food","family"],fee:0,duration_hours:1.5,area:"Kurukshetra",hidden_gem:false,lat:29.9695,lng:76.84,description:{en:"Huge sacred tank linked to the Gita. Evening aarti is magical.",hi:"गीता से जुड़ा विशाल पवित्र सरोवर। शाम की आरती जादुई।"},food:{en:"Chaat & kulfi near the Sarovar",hi:"सरोवर के पास चाट और कुल्फी"},tip:{en:"Go around sunset for aarti.",hi:"आरती के लिए शाम को जाएँ।"}},
+      {id:"jyotisar",name:{en:"Jyotisar",hi:"ज्योतिसर"},tags:["religious","heritage","nature"],fee:0,duration_hours:1.5,area:"Kurukshetra",hidden_gem:false,lat:29.993,lng:76.804,description:{en:"Where Krishna is believed to have given the Gita to Arjuna.",hi:"माना जाता है यहीं कृष्ण ने अर्जुन को गीता सुनाई।"},food:{en:"Parathas & lassi on Pehowa road",hi:"पहोवा रोड पर पराठे और लस्सी"},tip:{en:"Early morning is peaceful.",hi:"सुबह शांत रहती है।"}},
+      {id:"sheikh",name:{en:"Sheikh Chilli's Tomb",hi:"शेख चिल्ली का मकबरा"},tags:["heritage","family"],fee:25,duration_hours:1,area:"Kurukshetra",hidden_gem:true,lat:29.969,lng:76.847,description:{en:"Mughal tomb with marble dome and small museum.",hi:"संगमरमर गुंबद वाला मुगल मकबरा।"},food:{en:"Jalebi & samosa in Thanesar",hi:"थानेसर में जलेबी-समोसा"},tip:{en:"Hidden gem next to Brahma Sarovar.",hi:"ब्रह्म सरोवर के पास छुपा रत्न।"}},
+      {id:"panorama",name:{en:"Kurukshetra Panorama",hi:"कुरुक्षेत्र पैनोरमा"},tags:["heritage","family"],fee:50,duration_hours:2,area:"Kurukshetra",hidden_gem:false,lat:29.961,lng:76.827,description:{en:"3D Mahabharata panoramas + science exhibits. Great for kids.",hi:"महाभारत के 3D पैनोरमा। बच्चों के लिए बढ़िया।"},food:{en:"Cafeteria snacks",hi:"कैंटीन स्नैक्स"},tip:{en:"Check show timings.",hi:"शो का समय पूछ लें।"}},
+      {id:"bhadrakali",name:{en:"Bhadrakali Temple",hi:"भद्रकाली मंदिर"},tags:["religious","heritage"],fee:0,duration_hours:0.75,area:"Kurukshetra",hidden_gem:false,lat:29.961,lng:76.826,description:{en:"One of the 51 Shakti Peethas.",hi:"51 शक्तिपीठों में से एक।"},food:{en:"Prasad & kheer",hi:"प्रसाद और खीर"},tip:{en:"Busy on Tuesdays & Navratri.",hi:"मंगलवार और नवरात्रि में भीड़।"}},
+      {id:"church",name:{en:"Holy Redeemer Church",hi:"होली रिडीमर चर्च"},tags:["heritage"],fee:0,duration_hours:0.75,area:"Ambala",hidden_gem:true,lat:30.36,lng:76.83,description:{en:"British-era Gothic church in Ambala Cantt.",hi:"अंबाला कैंट का ब्रिटिश गॉथिक चर्च।"},food:{en:"Cantt bakeries & Sadar chaat",hi:"कैंट बेकरी और सदर चाट"},tip:{en:"Ask before photos inside.",hi:"फोटो से पहले पूछें।"}},
+      {id:"pinjore",name:{en:"Pinjore Gardens",hi:"पिंजौर गार्डन"},tags:["nature","heritage","family","food"],fee:50,duration_hours:2,area:"Pinjore",hidden_gem:false,lat:30.7937,lng:76.9158,description:{en:"17th-century Mughal garden with fountains and small zoo.",hi:"मुगल बाग़, फव्वारे और छोटा चिड़ियाघर।"},food:{en:"Garden restaurant & kulchas",hi:"गार्डन रेस्टोरेंट और कुलचे"},tip:{en:"Evening lights are beautiful.",hi:"शाम की रोशनी सुंदर।"}},
+      {id:"kalesar",name:{en:"Kalesar National Park",hi:"कालेसर राष्ट्रीय उद्यान"},tags:["nature","adventure","family"],fee:100,duration_hours:3,area:"Yamunanagar",hidden_gem:true,lat:30.431,lng:77.364,description:{en:"Shivalik forest — elephants, leopards, deer, 200+ birds.",hi:"शिवालिक जंगल — हाथी, तेंदुआ, हिरण।"},food:{en:"Dal-roti at gate dhabas",hi:"गेट पर दाल-रोटी"},tip:{en:"Hidden gem. Jeep safari extra. Go early.",hi:"छुपा रत्न। जीप सफारी अलग। सुबह जाएँ।"}},
+      {id:"morni",name:{en:"Morni Hills & Fort",hi:"मोरनी हिल्स और किला"},tags:["nature","adventure","heritage"],fee:0,duration_hours:2.5,area:"Morni",hidden_gem:true,lat:30.708,lng:77.091,description:{en:"Haryana's only hill station with pine views.",hi:"हरियाणा का एकमात्र हिल स्टेशन।"},food:{en:"Maggi, pakoras & chai",hi:"मैगी, पकोड़े और चाय"},tip:{en:"Winding roads — avoid late evening.",hi:"घुमावदार सड़कें — देर शाम न जाएँ।"}},
+      {id:"tikkar",name:{en:"Tikkar Taal",hi:"टिक्कर ताल"},tags:["nature","family"],fee:0,duration_hours:1.5,area:"Morni",hidden_gem:true,lat:30.735,lng:77.064,description:{en:"Twin lakes in the hills — boating & picnic.",hi:"पहाड़ियों में जुड़वाँ झीलें।"},food:{en:"Pakoras & chai by the lake",hi:"झील किनारे पकोड़े-चाय"},tip:{en:"Boating fee separate. Weekdays quiet.",hi:"नौकायन अलग। सप्ताह के दिन शांत।"}},
+      {id:"mansa",name:{en:"Mansa Devi Temple",hi:"मनसा देवी मंदिर"},tags:["religious"],fee:0,duration_hours:1.5,area:"Panchkula",hidden_gem:false,lat:30.717,lng:76.842,description:{en:"Hilltop Shakti shrine with ropeway views.",hi:"पहाड़ी शक्तिपीठ, रोपवे दृश्य।"},food:{en:"Prasad & sweets",hi:"प्रसाद और मिठाई"},tip:{en:"Mornings best. Avoid Navratri rush.",hi:"सुबह बेहतर। नवरात्रि भीड़ से बचें।"}},
+      {id:"nada",name:{en:"Nada Sahib Gurudwara",hi:"नाडा साहिब गुरुद्वारा"},tags:["religious","heritage","food"],fee:0,duration_hours:1,area:"Panchkula",hidden_gem:true,lat:30.69,lng:76.865,description:{en:"Peaceful gurudwara with free langar.",hi:"शांत गुरुद्वारा, मुफ्त लंगर।"},food:{en:"Free langar (cover head)",hi:"मुफ्त लंगर (सिर ढकें)"},tip:{en:"Cover head, remove shoes.",hi:"सिर ढकें, जूते उतारें।"}}
+    ];
+  }
+}
+
+function zoom(d){z=Math.min(1.4,Math.max(.88,z+d));document.querySelector("main").style.zoom=z}
+function toggleTheme(){const d=document.documentElement.getAttribute("data-theme")==="dark";document.documentElement.setAttribute("data-theme",d?"":"dark");$("btnTheme").textContent=d?"🌙":"☀️";$("btnTheme").classList.toggle("on",!d)}
+function toggleKid(){kidMode=!kidMode;document.documentElement.setAttribute("data-kid",kidMode?"on":"");$("btnKid").classList.toggle("on",kidMode);$("btnKid").setAttribute("aria-pressed",kidMode);if(kidMode)say(S().kidMode,"b");ui()}
+function usePre(i){const p=PRE[i];chosen=new Set(p.i);$("hours").value=p.h;$("budget").value=p.b;$("group").value=p.g;ui();generate()}
+function tog(k){chosen.has(k)?chosen.delete(k):chosen.add(k);ui()}
+function toggleLang(){lang=lang==="en"?"hi":"en";ui()}
+function leaveNow(){const n=new Date();$("stime").value=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");generate()}
+
+function toggleGemOnly(){
+  gemOnly=!gemOnly;
+  const el=$("gemOnlyChip");
+  if(el){el.classList.toggle("on",gemOnly);el.textContent=gemOnly?(lang==="en"?"💎 Hidden gems only ✓":"💎 सिर्फ छुपे रत्न ✓"):(lang==="en"?"💎 Hidden gems only":"💎 सिर्फ छुपे रत्न")}
+}
+
+function savePlan(){
+  if(!plan)return;
+  try{localStorage.setItem("gh_last_plan",JSON.stringify({plan,lang,ts:Date.now()}))}catch(e){}
+  const b=$("btnLast");if(b)b.style.display="block";
+}
+function loadLastPlan(){
+  try{
+    const raw=localStorage.getItem("gh_last_plan");
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    plan=data.plan;lang=data.lang||lang;
+    ui();render();
+    $("out").scrollIntoView({behavior:"smooth"});
+  }catch(e){}
+}
+
+function demoForJudges(){
+  $("start").value="mullana";
+  $("stime").value="09:00";
+  $("hours").value="7";
+  $("budget").value="400";
+  $("group").value="family";
+  chosen=new Set(["heritage","nature","family"]);
+  ui();
+  generate().then(()=>say(S().demo,"b"));
+}
+
+let wx={bad:false};
+async function loadWeather(){
+  const c=START[$("start").value]||START.mullana;
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c[0]}&longitude=${c[1]}&current=temperature_2m,weather_code,wind_speed_10m&timezone=Asia%2FKolkata`);
+    const j=await r.json();
+    const t=Math.round(j.current.temperature_2m),code=j.current.weather_code,wind=Math.round(j.current.wind_speed_10m);
+    let icon="☀️", desc="Clear";
+    if(code>=1&&code<=3){icon="⛅";desc="Partly cloudy"}
+    else if(code>=45&&code<=48){icon="🌫️";desc="Foggy"}
+    else if(code>=51&&code<=67){icon="🌧️";desc="Rainy"}
+    else if(code>=71&&code<=77){icon="❄️";desc="Snowy"}
+    else if(code>=80){icon="🌦️";desc="Showers / storm"}
+    wx={bad:code>=51||wind>=40};
+    $("weatherTxt").innerHTML=`<strong>${t}°C</strong> · ${icon} ${desc} · wind ${wind} km/h · ${SN[$("start").value][lang]}`+(wx.bad?" · ⚠️ outdoor stops ranked lower":"");
+  }catch{
+    wx={bad:false};$("weatherTxt").textContent="Weather unavailable · plan anyway";
+  }
+}
+
+function ui(){
+  const s=S();
+  $("tag").textContent=s.tag;
+  $("l_start").textContent=s.start;$("l_time").textContent=s.time;$("l_hours").textContent=s.hours;
+  $("l_budget").textContent=s.budget;$("l_group").textContent=s.group;$("l_int").textContent=s.int;
+  $("go").textContent=s.go;$("l_pre").textContent=s.pre;$("l_chat").textContent=s.chat;
+  $("q").placeholder=s.ph;$("sb").textContent=s.send;$("lb").textContent=lang==="en"?"हिन्दी":"English";
+  $("offlineNote").textContent=s.offlineNote;
+  const pitchEl=$("pitchText");if(pitchEl)pitchEl.innerHTML=s.pitch;
+  const howEl=$("howText");if(howEl)howEl.innerHTML=s.how;
+  const statusEl=$("aiStatus");if(statusEl)statusEl.textContent=!navigator.onLine?(lang==="en"?"📴 You are offline — built-in planner & cached data still work":"📴 आप ऑफ़लाइन हैं — बिल्ट-इन प्लानर चालू"):(keyOK()?s.aiOn:s.aiOff);
+  $("pre").innerHTML=PRE.map((p,i)=>`<div class="pre" role="button" tabindex="0" onclick="usePre(${i})"><span>${p.e}</span><b>${p[lang]}</b></div>`).join("");
+  const sv=$("start").value;
+  [...$("start").options].forEach(o=>o.textContent=SN[o.value][lang]+(o.value==="mullana"?" (MMDU)":""));
+  $("start").value=sv;
+  const gv=$("group").value||"friends";
+  $("group").innerHTML=Object.entries(GROUPS).map(([k,v])=>`<option value="${k}">${lang==="en"?v[1]:v[2]}</option>`).join("");
+  $("group").value=gv;
+  $("chips").innerHTML=INT.map(i=>`<span class="chip ${chosen.has(i[0])?"on":""}" onclick="tog('${i[0]}')">${lang==="en"?i[1]:i[2]}</span>`).join("");
+  $("qs").innerHTML=s.qs.map(q=>`<span class="chip" onclick="$('q').value=this.textContent;ask()">${q}</span>`).join("");
+  const gc=$("gemOnlyChip");
+  if(gc){gc.classList.toggle("on",gemOnly);gc.textContent=gemOnly?(lang==="en"?"💎 Hidden gems only ✓":"💎 सिर्फ छुपे रत्न ✓"):(lang==="en"?"💎 Hidden gems only":"💎 सिर्फ छुपे रत्न")}
+  try{if(localStorage.getItem("gh_last_plan")){const b=$("btnLast");if(b)b.style.display="block"}}catch(e){}
+  renderGems();
+  if(plan)render();
+}
+
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const road=(a,b)=>km(a,b)*1.45;
+const FOOD=h=>h<4?50:h<6?80:100;           // ₹ per person, estimate
+function costOf(pr,places,kms){
+  const n=GROUPS[pr.group][0],perKm=ASSUME.perKm??(n===1?3:n===2?5:7);   // ₹/km per vehicle (estimate)
+  const fees=places.reduce((a,p)=>a+p.fee,0),transport=Math.round(kms*perKm);
+  const parking=n===1?0:new Set(places.map(p=>p.area)).size*20,food=(ASSUME.food??FOOD(pr.hours))*n;
+  const total=fees*n+transport+parking+food;
+  return{n,fees,feesTotal:fees*n,transport,parking,food,total,perPerson:Math.round(total/n)};
+}
+// Builds the timeline INCLUDING the drive back home, and checks time + total cost.
+function schedule(pr,places){
+  let pos=START[pr.start],t=pr.startMin,kms=0,prev=SN[pr.start];
+  const st=places.map(p=>{
+    const q=[p.lat,p.lng],dm=drive(pos,q);kms+=road(pos,q);t+=dm;
+    const o={id:p.id,dm,start:fm(t),end:fm(t+p.duration_hours*60),travel:{en:`~${dm} min drive from ${prev.en}`,hi:`${prev.hi} से ~${dm} मिनट`}};
+    t+=p.duration_hours*60;pos=q;prev=p.name;return o;
+  });
+  const rd=drive(pos,START[pr.start]);kms+=road(pos,START[pr.start]);
+  const back=t+rd,limit=pr.startMin+pr.hours*60,cost=costOf(pr,places,kms);
+  return{st,rd,back,limit,kms,cost,timeOK:back<=limit,budgetOK:cost.perPerson<=pr.budget};
+}
+function fallback(pr){
+  let left=PLACES.filter(p=>!gemOnly||p.hidden_gem),ch=[];
+  const score=p=>{
+    let s=p.tags.filter(x=>pr.interests.includes(x)).length*3.2;
+    if(p.hidden_gem)s+=2.4;
+    if(pr.group==="family"&&p.tags.includes("family"))s+=1.5;
+    if(kidMode&&p.tags.includes("family"))s+=1.2;
+    if(gemOnly&&p.hidden_gem)s+=3;
+    if(wx.bad&&(p.tags.includes("nature")||p.tags.includes("adventure")))s-=3;
+    return s;
+  };
+  // Smart search: try every combo of up to 4 places in every order; keep the best that fits time + budget (incl. return home).
+  const perms=a=>a.length<2?[a]:a.flatMap((x,k)=>perms([...a.slice(0,k),...a.slice(k+1)]).map(r=>[x,...r]));
+  const combos=(a,k)=>k===0?[[]]:a.flatMap((x,n)=>combos(a.slice(n+1),k-1).map(r=>[x,...r]));
+  let bestV=-1e9;
+  for(let k=1;k<=Math.min(4,left.length);k++)for(const c of combos(left,k))for(const o of perms(c)){
+    const tr=schedule(pr,o);if(!tr.timeOK||!tr.budgetOK)continue;
+    const v=o.reduce((a,p)=>a+score(p)+1,0)-tr.st.reduce((a,x)=>a+x.dm,0)/45;
+    if(v>bestV){bestV=v;ch=o}
+  }
+  const sch=schedule(pr,ch),gems=ch.filter(p=>p.hidden_gem).length;
+  return{mode:"off",summary:{
+    en:`${ch.length} stops in ${pr.hours}h${gems?`, ${gems} hidden gem${gems>1?"s":""}`:""}. Back home by ${fm(sch.back)}. Est. ₹${sch.cost.perPerson}/person.`,
+    hi:`${pr.hours} घंटे में ${ch.length} जगहें${gems?` · ${gems} छुपा रत्न`:""}। ${fm(sch.back)} तक घर वापसी। लगभग ₹${sch.cost.perPerson}/व्यक्ति।`
+  },stops:sch.st.map((x,i)=>({...x,why:ch[i].description,food:ch[i].food,tip:ch[i].tip}))};
+}
+
+let aiDead=false;
+const keyOK=()=>!aiDead&&navigator.onLine&&location.protocol.startsWith("http");
+async function gemini(body){
+  const c=new AbortController(),tid=setTimeout(()=>c.abort(),CONFIG.TIMEOUT_MS);
+  try{
+    const r=await fetch(CONFIG.AI_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:c.signal});
+    if(!r.ok){if(r.status===404||r.status===405)aiDead=true;throw new Error(r.status)}
+    const j=await r.json();
+    return j.text??j.candidates[0].content.parts.map(p=>p.text||"").join("");
+  }finally{clearTimeout(tid)}
+}
+function compact(){return JSON.stringify(PLACES.map(p=>({id:p.id,name:p.name.en,tags:p.tags,fee:p.fee,hours:p.duration_hours,area:p.area,hiddenGem:p.hidden_gem,lat:p.lat,lng:p.lng,desc:p.description.en,food:p.food.en,tip:p.tip.en})))}
+
+async function aiPlan(pr){
+  const prompt=`You are expert Haryana local guide for Mullana-Ambala-Kurukshetra-Pinjore.
+Plan day trip using ONLY these place ids.
+Prefs: ${JSON.stringify({from:SN[pr.start].en,start:fm(pr.startMin),hours:pr.hours,budgetPerPersonTotal:pr.budget,group:pr.group,interests:pr.interests,kidMode,badWeather:wx.bad})}
+Places: ${compact()}
+Rules: budget is TOTAL per-person cost (entry+food+transport); the drive back home must finish inside the hours; cluster same area; include hidden_gem if fits; 3-6 stops, ordered; every text en+hi short.
+Return ONLY JSON: {"summary":{"en":"","hi":""},"stops":[{"id":"","why":{"en":"","hi":""},"food":{"en":"","hi":""},"tip":{"en":"","hi":""}}]}`;
+  const txt=await gemini({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:.55}});
+  const j=JSON.parse(txt.replace(/```json|```/g,"").trim());
+  if(!Array.isArray(j.stops)||!j.stops.length)throw new Error("empty");
+  // Validate: real ids only, no duplicates. Times/fees/return are RECOMPUTED locally, never trusted from the model.
+  const tx={};j.stops.forEach(x=>{if(x&&P(x.id)&&!tx[x.id])tx[x.id]=x});
+  let ps=Object.keys(tx).map(P);
+  while(ps.length){const c=schedule(pr,ps);if(c.timeOK&&c.budgetOK)break;ps.pop()}
+  if(!ps.length)throw new Error("bad");
+  const tt=(v,d)=>v&&typeof v.en==="string"?{en:v.en.slice(0,300),hi:typeof v.hi==="string"?v.hi.slice(0,300):v.en.slice(0,300)}:d;
+  const sch=schedule(pr,ps);
+  return{mode:"ai",summary:tt(j.summary,{en:`${ps.length} stops`,hi:`${ps.length} जगहें`}),
+    stops:sch.st.map((x,i)=>({...x,why:tt(tx[ps[i].id].why,ps[i].description),food:tt(tx[ps[i].id].food,ps[i].food),tip:tt(tx[ps[i].id].tip,ps[i].tip)}))};
+}
+
+async function generate(){
+  const b=$("go");b.disabled=true;b.textContent=S().busy;
+  $("out").innerHTML=`<div class="card"><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>`;
+  const pr={start:$("start").value,startMin:tm($("stime").value),hours:Math.max(1.5,+$("hours").value||6),budget:+$("budget").value||0,group:$("group").value,interests:[...chosen]};
+  try{plan=keyOK()?await aiPlan(pr):fallback(pr)}catch(e){plan=fallback(pr);plan.err=navigator.onLine&&!aiDead}
+  plan.pr=pr;b.disabled=false;b.textContent=S().go;savePlan();render();$("out").scrollIntoView({behavior:"smooth"});
+}
+
+// Explainable score: 30 budget + 25 time + 20 interests + 15 route + 10 group. Only shown if time AND budget validate.
+function fitBreakdown(pr,sch,ps){
+  const used=(sch.back-pr.startMin)/(pr.hours*60);
+  const budget=sch.budgetOK?30:0,time=sch.timeOK?Math.round(25*Math.min(1,used/.7)):0;
+  const interest=Math.round(20*ps.filter(p=>p.tags.some(t=>pr.interests.includes(t))).length/ps.length);
+  const avg=sch.st.reduce((a,x)=>a+x.dm,0)/sch.st.length;
+  const route=Math.round(15*Math.max(0,Math.min(1,(60-avg)/40)));
+  const group=pr.group==="family"?Math.round(10*ps.filter(p=>p.tags.includes("family")).length/ps.length):10;
+  return{budget,time,interest,route,group,total:budget+time+interest+route+group,valid:sch.timeOK&&sch.budgetOK};
+}
+
+function render(){
+  const s=S(),pr=plan.pr,L=(e,h)=>lang==="en"?e:h;
+  if(!plan.stops.length){$("out").innerHTML=`<div class="card">${s.none}</div>`;return}
+  const ps=plan.stops.map(x=>P(x.id)).filter(Boolean);
+  const sch=schedule(pr,ps),c=sch.cost,fit=fitBreakdown(pr,sch,ps);
+  const routeHtml=ps.map(p=>esc(p.name[lang].split(" ")[0])).join(" → ");
+  const o=START[pr.start],dest=START[pr.start];
+  const dirUrl=`https://www.google.com/maps/dir/?api=1&origin=${o[0]},${o[1]}&destination=${dest[0]},${dest[1]}&waypoints=${ps.map(p=>p.lat+","+p.lng).join("%7C")}&travelmode=driving`;
+
+  const cards=plan.stops.map((x,i)=>{
+    const p=P(x.id);if(!p)return"";
+    const ver=p.verified?`✔ ${L("Verified","सत्यापित")} ${esc(p.verified)}${p.hours_open?" · "+esc(p.hours_open):""}${p.fee_source?" · "+esc(p.fee_source):""}${p.season?" · "+esc(p.season):""}`
+      :`ℹ️ ${L("Fee/timings not yet verified — confirm locally","शुल्क/समय सत्यापित नहीं — पहुँचकर पुष्टि करें")}`;
+    return`<div class="stop" data-n="${i+1}">
+      <div class="time">⏰ ${esc(x.start)} – ${esc(x.end)}</div>
+      <div class="card">
+        <h3>${esc(p.name[lang])}</h3>
+        <div>${p.hidden_gem?`<span class="badge gem">${s.gem}</span>`:""}<span class="badge cat">${esc(p.area)}</span>${p.tags.includes("family")?`<span class="badge kid">🧒 ${L("Kid-friendly","बच्चों के लिए")}</span>`:""}</div>
+        <div class="meta">${s.fee}: ${p.fee?"₹"+p.fee+" ("+s.note+")":s.free} · ⏱ ${p.duration_hours}h</div>
+        <div class="meta">${ver}</div>
+        ${x.travel&&x.travel[lang]?`<div class="line">🚗 ${esc(x.travel[lang])}</div>`:""}
+        <div class="line"><b>${s.why}:</b> ${esc(x.why[lang])}</div>
+        <div class="line"><b>🍽️ ${s.eat}:</b> ${esc(x.food[lang])}</div>
+        <div class="line"><b>💡 ${s.tip}:</b> ${esc(x.tip[lang])}</div>
+        <a class="map" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}">${s.map}</a>
+      </div></div>`;
+  }).join("");
+
+  const back=`<div class="stop" data-n="⌂"><div class="time">🏠 ${fm(sch.back)}</div>
+    <div class="card" style="margin:0"><h3>${lang==="en"?"Back in "+SN[pr.start].en:SN[pr.start].hi+" वापसी"}</h3>
+    <div class="line">🚗 ~${sch.rd} min · ${sch.timeOK?"✅ "+L("home by","घर वापसी")+" "+fm(sch.back)+" ("+L("limit","सीमा")+" "+fm(sch.limit)+")":"⚠️ "+L("beyond your hours","आपके समय से ज़्यादा")}</div></div></div>`;
+
+  const row=(a,b)=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>${a}</span><span>${b}</span></div>`;
+  const cost=`<div class="costbar" style="display:block">
+    ${row(L("Entry fees","प्रवेश शुल्क"),`₹${c.feesTotal} (₹${c.fees} × ${c.n})`)}
+    ${row(L("Transport (est., "+Math.round(sch.kms)+" km)","यात्रा (अनुमान, "+Math.round(sch.kms)+" km)"),`₹${c.transport}`)}
+    ${row(L("Parking","पार्किंग"),`₹${c.parking}`)}
+    ${row(L("Food estimate","खाने का अनुमान"),`₹${c.food}`)}
+    <hr style="border:0;border-top:1px solid rgba(128,128,128,.4);margin:6px 0">
+    ${row(`<strong>${L("Total trip","कुल ट्रिप")}</strong>`,`<strong>₹${c.total} · ₹${c.perPerson}/${L("person","व्यक्ति")}</strong>`)}
+    ${row(L("Your budget","आपका बजट"),`₹${pr.budget}/${L("person","व्यक्ति")} ${sch.budgetOK?"✅":"⚠️"}`)}
+    <div class="meta">${L("All costs are estimates. Transport is per vehicle, split across the group.","सभी खर्च अनुमान हैं। यात्रा खर्च समूह में बँटा है।")}</div></div>`;
+
+  const scoreHtml=fit.valid
+    ?`<span class="badge score">${s.fit}: ${fit.total}/100</span><div class="meta">${L("Budget","बजट")} ${fit.budget}/30 · ${L("Time","समय")} ${fit.time}/25 · ${L("Interests","रुचि")} ${fit.interest}/20 · ${L("Route","रूट")} ${fit.route}/15 · ${L("Group","समूह")} ${fit.group}/10</div>`
+    :`<span class="badge">⚠️ ${L("Exceeds your time/budget — no fit score","समय/बजट से ज़्यादा — स्कोर नहीं")}</span>`;
+
+  $("out").innerHTML=`
+  <div class="card sum">
+    <span class="badge ${plan.mode==="ai"?"ai":"off"}">${plan.mode==="ai"?"🤖 "+s.ai:"⚙️ "+s.off}</span>
+    ${scoreHtml}
+    <p style="margin:8px 0 4px;font-size:1.02rem">${esc(plan.summary[lang])}</p>
+    ${plan.err?`<div class="meta">⚠️ ${s.err}</div>`:""}
+    ${wx.bad?`<div class="meta">🌧️ ${L("Rain/strong wind expected — outdoor stops ranked lower. Check conditions before leaving.","बारिश/तेज़ हवा का अनुमान — खुले स्थल कम प्राथमिकता। निकलने से पहले जाँचें।")}</div>`:""}
+    <div class="routebar"><span class="dot"></span> ${routeHtml} <span class="dot"></span> ${esc(SN[pr.start][lang])}</div>
+    ${routeSvg(pr,ps)}
+    ${cost}
+    <div style="height:10px;border-radius:6px;background:rgba(128,128,128,.25);overflow:hidden"><div style="height:100%;width:${Math.min(100,Math.round(c.perPerson/pr.budget*100))}%;background:${sch.budgetOK?"#16a34a":"#dc2626"}"></div></div><div class="meta">${L("Budget used","बजट उपयोग")}: ${Math.round(c.perPerson/pr.budget*100)}%</div>
+    <div class="safety">🛡️ ${s.safety}: ${lang==="en"
+      ?"Carry water, charge phone, prefer daylight for hills (Morni/Kalesar). Confirm fees on arrival."
+      :"पानी रखें, फ़ोन चार्ज रखें, पहाड़ियों के लिए दिन चुनें। शुल्क पहुँचकर पुष्टि करें।"}</div>
+    <div class="helpline">📞 <strong>${s.help}</strong><br>
+      Emergency 112 · Police 100 · Ambulance 108 · Women Helpline 1091 · Tourist Helpline 1363 · Road Accident 1073<br>
+      <small>${L("Please confirm numbers on official government sites.","कृपया आधिकारिक सरकारी साइट पर नंबर जाँचें।")}</small>
+    </div>
+    <div style="margin-top:8px"><strong>${s.before}</strong>
+      <ul class="checklist">
+        <li>${L("Water bottle + light snacks","पानी की बोतल + हल्का नाश्ता")}</li>
+        <li>${L("Power bank + offline maps downloaded","पावर बैंक + ऑफ़लाइन मैप")}</li>
+        <li>${L("Cash for small stalls & parking","छोटी दुकानों/पार्किंग के लिए नकदी")}</li>
+        <li>${L("Cover head at gurudwara / remove shoes at temples","गुरुद्वारे में सिर ढकें · मंदिर में जूते उतारें")}</li>
+      </ul>
+    </div>
+    <div class="actions">
+      <button onclick="copyPlan()">${s.copy}</button>
+      <button onclick="shareWA()">💬 WhatsApp</button>
+      <button onclick="window.open('${dirUrl}','_blank','noopener')">🗺️ ${L("Full route","पूरा रूट")}</button>
+      <button onclick="speak(planText())">🔊</button>
+      <button onclick="window.print()">🖨️</button>
+      <button onclick="generate()">${s.again}</button>
+    </div>
+  </div>
+  <div class="tl">${cards}${back}</div>`;
+}
+
+
+// ---- Natural-language trip input (rule-based, works offline) ----
+function parseTrip(q){
+  const t=q.toLowerCase(),r={found:[]};
+  const A={mullana:/mullana|मुल्लाना|mmdu/,ambala:/ambala|अंबाला|अम्बाला/,kkr:/kurukshetra|कुरुक्षेत्र|kuruk/,pkl:/panchkula|पंचकूला/,chd:/chandigarh|चंडीगढ़|चंडीगढ/,ynr:/yamunanagar|यमुनानगर|yamuna/};
+  for(const k in A){if(A[k].test(t)){r.start=k;r.found.push(SN[k].en);break}}
+  let m=t.match(/(?:₹|rs\.?|inr)\s*(\d+)|(\d+)\s*(?:₹|rs\b|rupees?|rupaye|rupay|रुपये|रुपए|रु)/);
+  if(m){r.budget=+(m[1]||m[2]);r.found.push("₹"+r.budget)}
+  m=t.match(/(\d+(?:\.\d+)?)\s*(?:ghante|ghanta|ghanta|hours?|hrs?|h\b|घंटे|घण्टे)/);
+  if(m){r.hours=+m[1];r.found.push(r.hours+"h")}
+  const G=[["family",/family|parivar|परिवार|bachch|बच्च|kids/],["friends",/friends?|dost|दोस्त/],["couple",/couple|jodi|जोड़ा|wife|husband|patni|पत्नी/],["solo",/solo|akela|akele|अकेले|अकेला/]];
+  for(const [k,re] of G)if(re.test(t)){r.group=k;r.found.push(k);break}
+  const I={heritage:/heritage|history|itihas|virasat|विरासत|इतिहास|fort|qila|किला/,nature:/nature|prakriti|प्रकृति|jungle|hill|pahad|पहाड़|lake|jheel|झील/,religious:/temple|mandir|मंदिर|religious|dharmik|धार्मिक|gurudwara|गुरुद्वारा|spiritual/,food:/food|khana|khaana|खाना|dhaba|ढाबा|eat/,adventure:/adventure|romanch|रोमांच|trek|safari/};
+  const iv=Object.keys(I).filter(k=>I[k].test(t));if(iv.length){r.interests=iv;r.found.push(...iv)}
+  return r;
+}
+function nlPlan(){
+  const q=$("nl").value.trim();if(!q)return;
+  const r=parseTrip(q);
+  if(!r.found.length){$("nlMsg").textContent="Couldn't understand — try: Mullana se 500 rupees mein family ke saath 5 ghante ki trip banao";return}
+  if(r.start)$("start").value=r.start;
+  if(r.budget)$("budget").value=r.budget;
+  if(r.hours)$("hours").value=r.hours;
+  if(r.group)$("group").value=r.group;
+  if(r.interests)chosen=new Set(r.interests);
+  ui();loadWeather();
+  $("nlMsg").textContent="✅ Understood: "+r.found.join(" · ");
+  generate();
+}
+function nlVoice(){
+  const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!R){$("nlMsg").textContent="Voice needs Chrome — type instead.";return}
+  const rec=new R();rec.lang=lang==="hi"?"hi-IN":"en-IN";
+  rec.onresult=e=>{$("nl").value=e.results[0][0].transcript;nlPlan()};rec.start();
+}
+// ---- Offline route map (inline SVG, no tiles needed) ----
+function routeSvg(pr,ps){
+  const pts=[START[pr.start],...ps.map(p=>[p.lat,p.lng])];
+  const la=pts.map(p=>p[0]),ln=pts.map(p=>p[1]);
+  const [a,b]=[Math.min(...la),Math.max(...la)],[c,d]=[Math.min(...ln),Math.max(...ln)];
+  const W=320,H=190,pd=28,sx=(d-c)||.01,sy=(b-a)||.01,k=Math.min((W-2*pd)/sx,(H-2*pd)/sy);
+  const X=p=>pd+(p[1]-c)*k+((W-2*pd)-sx*k)/2,Y=p=>H-pd-(p[0]-a)*k-((H-2*pd)-sy*k)/2;
+  const line=pts.map(p=>X(p).toFixed(1)+","+Y(p).toFixed(1)).join(" ");
+  const home=`${X(pts[pts.length-1]).toFixed(1)},${Y(pts[pts.length-1]).toFixed(1)} ${X(pts[0]).toFixed(1)},${Y(pts[0]).toFixed(1)}`;
+  const dots=pts.slice(1).map((p,i)=>`<circle cx="${X(p).toFixed(1)}" cy="${Y(p).toFixed(1)}" r="10" fill="#f97316"/><text x="${X(p).toFixed(1)}" y="${(Y(p)+4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${i+1}</text>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;border-radius:12px;background:rgba(15,90,102,.08);margin:8px 0" role="img" aria-label="Route map"><polyline points="${line}" fill="none" stroke="#0f5a66" stroke-width="3"/><polyline points="${home}" fill="none" stroke="#0f5a66" stroke-width="2" stroke-dasharray="5 4"/><rect x="${(X(pts[0])-9).toFixed(1)}" y="${(Y(pts[0])-9).toFixed(1)}" width="18" height="18" rx="4" fill="#0f5a66"/><text x="${X(pts[0]).toFixed(1)}" y="${(Y(pts[0])+4).toFixed(1)}" text-anchor="middle" font-size="11" fill="#fff">🏠</text>${dots}</svg>`;
+}
+
+
+const ART={religious:["#fb7185,#f97316","🛕"],nature:["#34d399,#0ea5e9","🌿"],heritage:["#8b5cf6,#ec4899","🏰"],adventure:["#f43f5e,#f59e0b","🥾"],food:["#facc15,#f97316","🍛"]};
+function renderGems(){
+  const g=$("gems");if(!g||!PLACES.length)return;
+  g.innerHTML=PLACES.filter(p=>p.hidden_gem).map(p=>{const a=ART[p.tags.find(t=>ART[t])]||ART.nature;
+    return`<div class="gc"><div class="art" style="background:linear-gradient(135deg,${a[0]})">${a[1]}</div><div class="bd"><b>${esc(p.name[lang])}</b><small>${esc(p.area)} · ${p.fee?"₹"+p.fee:S().free}</small><button onclick="gemGo('${p.id}')">✨ ${lang==="en"?"Plan around this":"इसके आसपास प्लान"}</button></div></div>`}).join("");
+}
+function gemGo(id){const p=P(id);chosen=new Set(p.tags.filter(t=>INT.some(i=>i[0]===t)));ui();generate()}
+function setAssume(){
+  const f=$("aFood").value,k=$("aKm").value;
+  ASSUME.food=f===""?null:+f;ASSUME.perKm=k===""?null:+k;ASSUME.buffer=$("aBuf").checked?1.25:1;
+  if(plan)generate();
+}
+function planText(){
+  const lines=plan.stops.map(x=>`${x.start}–${x.end}  ${P(x.id).name[lang]}${P(x.id).hidden_gem?" 💎":""}`);
+  return `🧭 Ghoomo Haryana — local day plan\n${lines.join("\n")}\n\nNot a tourist-trap list. Local Haryana spots & hidden gems.\nMade for locals · HACKSPRINT 2026`;
+}
+function copyPlan(){navigator.clipboard&&navigator.clipboard.writeText(planText())}
+function shareWA(){window.open("https://wa.me/?text="+encodeURIComponent(planText()),"_blank")}
+function speak(t){if(!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=lang==="hi"?"hi-IN":"en-IN";speechSynthesis.speak(u)}
+function mic(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){alert("Use Chrome for voice");return}const r=new R();r.lang=lang==="hi"?"hi-IN":"en-IN";r.onresult=e=>{$("q").value=e.results[0][0].transcript;ask()};r.start()}
+
+function say(t,c){const d=document.createElement("div");d.className="m "+c;d.textContent=t;$("msgs").appendChild(d);$("msgs").scrollTop=1e9;return d}
+function offlineAnswer(q){
+  const ql=q.toLowerCase();
+  const p=PLACES.find(p=>ql.includes(p.name.en.toLowerCase().split(/[ (,]/)[0])||q.includes(p.name.hi.split(" ")[0])||ql.includes(p.id))||lastPlace;
+  const hid=PLACES.filter(x=>x.hidden_gem);
+  if(/hidden|gem|छुपा|छिपा/i.test(q))return hid.map(x=>"💎 "+x.name[lang]).join("\n");
+  if(!p||(/best|food|खाना/i.test(q)&&!p))return PLACES.filter(x=>x.tags.includes("food")).slice(0,7).map(x=>`🍽️ ${x.name[lang]}: ${x.food[lang]}`).join("\n");
+  lastPlace=p;const f=p.fee?`₹${p.fee}`:S().free;
+  if(/food|eat|खाना/i.test(q))return`🍽️ ${p.name[lang]}: ${p.food[lang]}`;
+  if(/fee|ticket|शुल्क|कितना/i.test(q))return`${p.name[lang]}: ${f}`;
+  if(/tip|सुझाव/i.test(q))return`💡 ${p.tip[lang]}`;
+  return`${p.name[lang]} (${p.area})\n${p.description[lang]}\n⏱ ${p.duration_hours}h · ${f}\n🍽️ ${p.food[lang]}\n💡 ${p.tip[lang]}`;
+}
+async function ask(){
+  const q=$("q").value.trim();if(!q)return;$("q").value="";say(q,"u");const w=say("…","b");let a=null;
+  if(keyOK()){try{
+    const sys=`Friendly Haryana local guide for Mullana-Ambala-Kurukshetra-Pinjore. Answer in ${lang==="en"?"English":"Hindi"}, 2-5 short sentences. Fees approximate. Data: ${compact()}`;
+    hist.push({role:"user",parts:[{text:q}]});
+    a=await gemini({systemInstruction:{parts:[{text:sys}]},contents:hist.slice(-8)});
+    hist.push({role:"model",parts:[{text:a}]});
+  }catch{hist.pop();a=null}}
+  w.textContent=a||offlineAnswer(q);w.onclick=()=>speak(w.textContent);
+}
+
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+addEventListener("online",ui);addEventListener("offline",ui);
+(async()=>{await loadPlaces();ui();$("start").addEventListener("change",loadWeather);loadWeather();say(S().hi,"b")})();
+</script>
+</body>
+</html>
